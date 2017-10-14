@@ -9,6 +9,7 @@
 
 #above ignores files with no extension
 
+tst.*
 *~
 *~'#*
 *.out
