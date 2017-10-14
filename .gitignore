@@ -1,0 +1,15 @@
+#Ignore All
+*
+
+#Unignore those with extensions
+!*.*
+
+#Unignore directories
+!*/
+
+#above ignores files with no extension
+
+*~
+*~'#*
+*.out
+*.pdf
