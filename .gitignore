@@ -7,6 +7,9 @@
 #Unignore directories
 !*/
 
+!makefile
+#Unignore makefile
+
 #above ignores files with no extension
 
 tst.*
