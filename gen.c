@@ -18,7 +18,8 @@ int main(int argc, char *argv[]){
   char input;
   int numChars;
   unsigned char *instFile;
-  unsigned char *addr;
+  unsigned char *addr = malloc(10);
+  strcpy(addr,"0x7fffffffdc30");
   unsigned char *byteAddr;
 
   if(argc != 4){
@@ -31,8 +32,8 @@ int main(int argc, char *argv[]){
 
   instFile = argv[1];
   numChars = atoi(argv[2]) + 8; //add 8 bytes for fp
-  addr = argv[3];
-
+  //addr = argv[3];
+  
   /*
   if(strlen(instructions) > numChars){
     printf("Instructions length exceeds length of buffer.");
