@@ -19,7 +19,9 @@ int main(int argc, char *argv[]){
   int numChars;
   unsigned char *instFile;
   unsigned char *addr = malloc(10);
-  strcpy(addr,"0x7fffffffdc30");
+  
+  strcpy(addr, "0x7fffffffdce0");
+  //strcpy(addr,"0x7fffffffdc30");
   unsigned char *byteAddr;
 
   if(argc != 4){
