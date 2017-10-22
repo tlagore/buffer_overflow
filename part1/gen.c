@@ -11,8 +11,8 @@ unsigned char* littleEndian(char *str, int numChars);
 // 0x7fffffffdca0 <- start of buf according to a.out
 
 // Defines
-#define ADDR_SIZE 64
-#define BYTES_IN_ADDR 8
+#define ADDR_SIZE 8
+#define BITS_IN_BYTE 8
 #define NOP 0x90
 #define BUF_ADDR "0x7fffffffdca0"
 
@@ -30,6 +30,7 @@ int main(int argc, char *argv[]){
   // Store the address of the Buffer start.
   addr = littleEndian( BUF_ADDR, 8 );
 
+  // Notify user with instructions on how to use the program
   if(argc != 3){
     printf("Wrong number of arguments, use ./gen [instructions] [num_bytes_in_buffer]\n");
     printf("Instructions: file of instructions to be run. Size must not exceed num_bytes_in_buffer. Expected to be in hex.\n");
@@ -88,47 +89,50 @@ int main(int argc, char *argv[]){
   fclose(instFp);
 }
 
-//consider passing output through a parameter & returning size of returned array.
+/*
+  littleEndian takes a character address and a specified required number of bytes,
+  it returns the address (assumed to be in the form 0x000000) in little endian format,
+  padded with zeroes. 
+ */
 unsigned char* littleEndian(char *addr, int numBytes){
-  unsigned char *tmpRet = malloc(ADDR_SIZE / 8);
-  //  unsigned char *ret = malloc(ADDR_SIZE / 8);
-  char tmp, tmp2;
-  int i = 0, j;
-
-  long long hex = strtoll(addr, NULL, 16);
-  
-  for(i = 0; i < (ADDR_SIZE / 8) - numBytes; i++){
-    tmpRet[i] = 0;
+  //stop people from attempting to write address that is longer than possible
+  if(numBytes > ADDR_SIZE){
+    return NULL;
   }
 
-  i = ADDR_SIZE / 8 - 1;
+  // Local variables
+  int addrSize = ADDR_SIZE;
+  unsigned char *ret = malloc(addrSize);
+  char tmp;
+  int i = 0, j;
 
-  //place hex into char array hex by hex
+  //convert address to a hex number
+  long long hex = strtoll(addr, NULL, 16);
+
+  //pad for size 
+  for(i = 0; i < addrSize - numBytes; i++){
+    ret[i] = 0;
+  }
+
+  i = addrSize - 1;
+
+  //place hex into char array digit by digit
   while(hex != 0){ 
-    tmpRet[i] = hex & 0xFF;
-    hex = hex >> 8;
+    ret[i] = hex & 0xFF;
+    hex = hex >> BITS_IN_BYTE;
     i--;
   }
    
   //swap byte order
-  j = ADDR_SIZE / 8 - 1;
-  for(i = 0; i < ADDR_SIZE / 16; i+=2){
-    tmp = tmpRet[i];
-    tmp2 = tmpRet[i+1];
+  j = addrSize - 1;
+  for(i = 0; i < addrSize / 2; i++){
+    tmp = ret[i];
 
-    tmpRet[i] = tmpRet[j-1];
-    tmpRet[i+1] = tmpRet[j];    
-    
-    tmpRet[j - 1] = tmp;
-    tmpRet[j] = tmp2;
+    ret[i] = ret[j];
+    ret[j] = tmp;
 
-    j-=2;
+    j--;
   }
   
-  //crunch char array to maintain one byte of hex in each element (rather than a single hex digit).
-  //  for(i = 0; i < ADDR_SIZE / 8; i++){
-  //  ret[i] = tmpRet[(i*2)] << 4 | tmpRet[(i*2)+1];
-  //}
-
-  return tmpRet;
+  return ret;
 }
