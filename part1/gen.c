@@ -101,8 +101,7 @@ unsigned char* littleEndian(char *addr, int numBytes){
   }
 
   // Local variables
-  int addrSize = ADDR_SIZE;
-  unsigned char *ret = malloc(addrSize);
+  unsigned char *ret = malloc(ADDR_SIZE);
   char tmp;
   int i = 0, j;
 
@@ -110,11 +109,11 @@ unsigned char* littleEndian(char *addr, int numBytes){
   long long hex = strtoll(addr, NULL, 16);
 
   //pad for size 
-  for(i = 0; i < addrSize - numBytes; i++){
+  for(i = 0; i < ADDR_SIZE - numBytes; i++){
     ret[i] = 0;
   }
 
-  i = addrSize - 1;
+  i = ADDR_SIZE - 1;
 
   //place hex into char array digit by digit
   while(hex != 0){ 
@@ -124,8 +123,8 @@ unsigned char* littleEndian(char *addr, int numBytes){
   }
    
   //swap byte order
-  j = addrSize - 1;
-  for(i = 0; i < addrSize / 2; i++){
+  j = ADDR_SIZE - 1;
+  for(i = 0; i < ADDR_SIZE / 2; i++){
     tmp = ret[i];
 
     ret[i] = ret[j];
