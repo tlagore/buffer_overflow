@@ -3,7 +3,7 @@
 
 int func();
 
-int main(){  
+int main(int argc, char *argv[]){  
   //find 0x7ffff7a01000, 0x7ffff7dd2000, '/', 'b', 'i', 'n', '/', 's', 'h'
   // execve = 0x7ffff7ad6020
   // 0x7ffff7b99673 = /bin/sh
