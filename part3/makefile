@@ -2,4 +2,4 @@ TAR=gen
 
 
 all:	
-	gcc gen.c -Wall -o $(TAR)
+	gcc gen.c -o $(TAR)
