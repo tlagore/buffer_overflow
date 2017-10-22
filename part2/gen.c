@@ -92,7 +92,6 @@ int main(int argc, char *argv[]){
 
   fwrite(addr, sizeof(char), ADDR_SIZE, file);
 
-  free(shAddr);
   free(addr);
   free(shAddr);
 
