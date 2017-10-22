@@ -132,47 +132,39 @@ unsigned char* littleEndian(char *addr, int numBytes){
     return NULL;
   }
   
-  unsigned char *tmpRet = malloc(ADDR_SIZE / 4);
-  unsigned char *ret = malloc(ADDR_SIZE / BITS_IN_BYTE);
-  char tmp, tmp2;
+  //unsigned char *tmpRet = malloc(ADDR_SIZE / 4);
+  int addrSize = ADDR_SIZE / BITS_IN_BYTE;
+  unsigned char *ret = malloc(addrSize);
+  char tmp;
   int i = 0, j;
 
   //convert address to a hex number
   long long hex = strtoll(addr, NULL, 16);
 
   //pad for size 
-  for(i = 0; i < (ADDR_SIZE / 4) - numBytes; i++){
-    tmpRet[i] = 0;
+  for(i = 0; i < addrSize - numBytes; i++){
+    ret[i] = 0;
   }
 
-  i = ADDR_SIZE / 4 - 1;
+  i = addrSize - 1;
 
   //place hex into char array digit by digit
   while(hex != 0){ 
-    tmpRet[i] = hex & 0xF;
-    hex = hex >> 4;
+    ret[i] = hex & 0xFF;
+    hex = hex >> BITS_IN_BYTE;
     i--;
   }
    
   //swap byte order
-  j = ADDR_SIZE / 4 - 1;
-  for(i = 0; i < ADDR_SIZE / 8; i+=2){
-    tmp = tmpRet[i];
-    tmp2 = tmpRet[i+1];
+  j = addrSize - 1;
+  for(i = 0; i < addrSize / 2; i++){
+    tmp = ret[i];
 
-    tmpRet[i] = tmpRet[j-1];
-    tmpRet[i+1] = tmpRet[j];    
-    
-    tmpRet[j - 1] = tmp;
-    tmpRet[j] = tmp2;
+    ret[i] = ret[j];
+    ret[j] = tmp;
 
-    j-=2;
+    j--;
   }
   
-  //crunch char array to maintain one byte of hex in each element (rather than a single hex digit).
-  for(i = 0; i < ADDR_SIZE / 8; i++){
-    ret[i] = tmpRet[(i*2)] << 4 | tmpRet[(i*2)+1];
-  }
-
   return ret;
 }
